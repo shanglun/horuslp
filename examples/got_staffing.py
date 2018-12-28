@@ -2,11 +2,11 @@
 11. Demo for solving something non-trivial
    a. The game of thrones staffing problem
 '''
-from core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
-from core.Variables import Variable, BinaryVariable, BinaryVariableGroup
-from core.constants import MAXIMIZE, MINIMIZE
 import copy
 
+from horuslp.core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
+from horuslp.core.constants import MAXIMIZE, MINIMIZE
+from horuslp.core.Variables import Variable, BinaryVariable, BinaryVariableGroup
 
 shift_requirements = [1, 4, 3, 5, 2]
 workers = {

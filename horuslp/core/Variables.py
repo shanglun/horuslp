@@ -2,9 +2,10 @@
 Base classes for defining variables of various types.
 """
 
-from collections import OrderedDict
-from core.constants import BINARY, CONTINUOUS, INTEGER
 import pulp as pl
+from collections import OrderedDict
+
+from horuslp.core.constants import BINARY, CONTINUOUS, INTEGER
 
 
 class Variable:

@@ -2,9 +2,9 @@
 6. Incompatible constraints should be identifiable and pullable
 '''
 
-from core import Constraint, VariableManager, Problem, ObjectiveComponent
-from core.Variables import BinaryVariable
-from core.constants import MAXIMIZE
+from horuslp.core.Variables import BinaryVariable
+from horuslp.core import Constraint, VariableManager, Problem, ObjectiveComponent
+from horuslp.core.constants import MAXIMIZE
 
 
 class SizeConstraint(Constraint):

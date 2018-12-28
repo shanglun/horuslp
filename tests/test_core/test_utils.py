@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, Mock
-from core.utils import get_constraints_value, call_with_required_args
+
+from horuslp.core.utils import get_constraints_value, call_with_required_args
 
 
 def test_get_constr_value_null():

@@ -1,11 +1,12 @@
+import pulp as pl
 import pytest
-from unittest.mock import patch, Mock
+from collections import OrderedDict
 from core import ObjectiveComponent, Constraint, Metric, VariableManager, CombinedObjective
 from core.Variables import BinaryVariable, IntegerVariable
-from core.ProblemClass import Problem
-import pulp as pl
 from core.constants import MAXIMIZE
-from collections import OrderedDict
+from unittest.mock import patch, Mock
+
+from horuslp.core.ProblemClass import Problem
 
 
 class TestProblem(Problem):

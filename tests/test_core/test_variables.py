@@ -1,9 +1,10 @@
+import pulp as pl
 import pytest
 from unittest.mock import patch, Mock
-from core.Variables import Variable, VariableGroup, VariableManager, IntegerVariable, IntegerVariableGroup,\
+
+from horuslp.core import BINARY, INTEGER, CONTINUOUS
+from horuslp.core import Variable, VariableGroup, VariableManager, IntegerVariable, IntegerVariableGroup, \
     BinaryVariable, BinaryVariableGroup
-from core.constants import BINARY, INTEGER, CONTINUOUS
-import pulp as pl
 
 
 def test_variable_class():

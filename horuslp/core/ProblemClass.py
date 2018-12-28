@@ -2,12 +2,13 @@
 The problem class that manages the main logic for the library
 """
 
-from core.constants import MAXIMIZE, MINIMIZE
-from collections import OrderedDict
-from core.Objective import CombinedObjective
-from core.utils import get_constraints_value, call_with_required_args
 import itertools
 import pulp as pl
+from collections import OrderedDict
+from horuslp.core.Objective import CombinedObjective
+from horuslp.core.constants import MAXIMIZE, MINIMIZE
+
+from horuslp.core.utils import get_constraints_value, call_with_required_args
 
 
 class Problem:

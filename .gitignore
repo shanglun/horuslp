@@ -1,3 +1,6 @@
 .DS_Store
 .idea/*
 .pypirc
+dist/*
+MANIFEST
+setup.py

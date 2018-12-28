@@ -3,10 +3,11 @@
 and constraints. Can be useful if we have "raw" variables and variables that come from combinations of raw variables,
 for instance
 '''
-from core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
-from core.Variables import BinaryVariableGroup
-from core.constants import MAXIMIZE
 import json
+
+from horuslp.core.Variables import BinaryVariableGroup
+from horuslp.core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
+from horuslp.core.constants import MAXIMIZE
 
 JSON = '''
 {

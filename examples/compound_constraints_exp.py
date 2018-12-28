@@ -2,9 +2,9 @@
 4. Constraints can be dependent on each other, so automatically resolve those. Also automatically
 report custom objectives
 '''
-from core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
-from core.Variables import Variable, BinaryVariable
-from core.constants import MAXIMIZE
+from horuslp.core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
+from horuslp.core.constants import MAXIMIZE
+from horuslp.core.Variables import Variable, BinaryVariable
 
 
 class DependentConstraint(Constraint):

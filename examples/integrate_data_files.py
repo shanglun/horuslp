@@ -1,10 +1,11 @@
 '''
 7. Demo for defining an LP from data file
 '''
-from core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
-from core.Variables import Variable, BinaryVariable
-from core.constants import MAXIMIZE
 import json
+
+from horuslp.core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
+from horuslp.core import MAXIMIZE
+from horuslp.core import Variable, BinaryVariable
 
 JSON = '''
 {

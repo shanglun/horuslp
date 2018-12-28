@@ -1,6 +1,7 @@
-from core.Objective import ObjectiveComponent, CombinedObjective
 import pytest
 from unittest.mock import patch, Mock
+
+from horuslp.core import ObjectiveComponent, CombinedObjective
 
 
 def test_objective_default_name():

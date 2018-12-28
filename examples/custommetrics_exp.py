@@ -2,10 +2,10 @@
 8. Custom metrics should be definable!
 '''
 
-from core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
-from core.Variables import Variable, BinaryVariable
-from core.constants import MAXIMIZE
 import json
+from horuslp.core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
+from horuslp.core.constants import MAXIMIZE
+from horuslp.core.Variables import Variable, BinaryVariable
 
 JSON = '''
 {

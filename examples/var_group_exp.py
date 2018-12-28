@@ -2,9 +2,9 @@
 2. Solve the knapsack problem using variable group instead of individual variables
 '''
 
-from core import Constraint, VariableManager, Problem, ObjectiveComponent
-from core.Variables import BinaryVariableGroup
-from core.constants import MAXIMIZE
+from horuslp.core.Variables import BinaryVariableGroup
+from horuslp.core import Constraint, VariableManager, Problem, ObjectiveComponent
+from horuslp.core.constants import MAXIMIZE
 
 
 class SizeConstraint(Constraint):

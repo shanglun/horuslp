@@ -1,5 +1,6 @@
 import pytest
-from core.Constraint import Constraint
+
+from horuslp.core.Constraint import Constraint
 
 
 def test_constraint_initialization():

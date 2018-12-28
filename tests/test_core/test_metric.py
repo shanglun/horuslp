@@ -1,5 +1,6 @@
-from core.Metric import Metric
 import pytest
+
+from horuslp.core import Metric
 
 
 def test_metric_default_name():

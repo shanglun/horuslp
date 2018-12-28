@@ -2,7 +2,7 @@
 Base classes for definition of objectives
 """
 
-from core.utils import call_with_required_args
+from horuslp.core.utils import call_with_required_args
 
 
 class CombinedObjective:

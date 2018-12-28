@@ -1,9 +1,9 @@
 '''
 5. Multiple objectives should be easy to define and easy to weigh
 '''
-from core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent, CombinedObjective
-from core.Variables import Variable, BinaryVariable
-from core.constants import MAXIMIZE
+from horuslp.core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent, CombinedObjective
+from horuslp.core.constants import MAXIMIZE
+from horuslp.core.Variables import Variable, BinaryVariable
 
 
 class DependentConstraint(Constraint):
