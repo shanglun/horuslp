@@ -1,0 +1,5 @@
+{
+  "test_core/test_problem.py::test_build_subproblem": true,
+  "test_core/test_problem.py::test_constraint_flattening": true,
+  "test_core/test_problem.py::test_prob_initializer": true
+}

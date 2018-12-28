@@ -1,0 +1,9 @@
+'''
+Constants for the core library.
+'''
+
+BINARY = 'BINARY'
+CONTINUOUS = 'CONTINUOUS'
+INTEGER = 'INTEGER'
+MAXIMIZE = 'MAXIMIZE'
+MINIMIZE = 'MINIMIZE'
