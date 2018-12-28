@@ -1,9 +1,9 @@
 import pulp as pl
 import pytest
 from collections import OrderedDict
-from core import ObjectiveComponent, Constraint, Metric, VariableManager, CombinedObjective
-from core.Variables import BinaryVariable, IntegerVariable
-from core.constants import MAXIMIZE
+from horuslp.core import ObjectiveComponent, Constraint, Metric, VariableManager, CombinedObjective
+from horuslp.core.Variables import BinaryVariable, IntegerVariable
+from horuslp.core.constants import MAXIMIZE
 from unittest.mock import patch, Mock
 
 from horuslp.core.ProblemClass import Problem
@@ -154,7 +154,7 @@ def test_non_flattening():
 
 
 def test_implement_constraint():
-    with patch('core.ProblemClass.call_with_required_args') as cwra:
+    with patch('horuslp.core.ProblemClass.call_with_required_args') as cwra:
         prob = TestProblem()
         prob.vars = 'test_vars'
         lp_prob_mock = ''
@@ -179,7 +179,7 @@ def test_implement_constraints():
 
 
 def test_implement_objective():
-    with patch('core.ProblemClass.call_with_required_args') as cwra:
+    with patch('horuslp.core.ProblemClass.call_with_required_args') as cwra:
         cwra.return_value = 'test_cwra_return'
         prob = TestProblem()
         prob.vars = 'vars_test'
@@ -190,7 +190,7 @@ def test_implement_objective():
 
 
 def test_build_model_already_built():
-    with patch('core.ProblemClass.pl.LpProblem') as lpp:
+    with patch('horuslp.core.ProblemClass.pl.LpProblem') as lpp:
         prob = TestProblem()
         prob.model_built = True
         prob.implement_constraints = Mock()
@@ -203,7 +203,7 @@ def test_build_model_already_built():
 
 
 def test_build_model_min():
-    with patch('core.ProblemClass.pl.LpProblem') as lpp:
+    with patch('horuslp.core.ProblemClass.pl.LpProblem') as lpp:
         lpp.return_value = 'test_lp_prob'
         prob = TestProblem()
         prob.implement_constraints = Mock()
@@ -217,7 +217,7 @@ def test_build_model_min():
 
 
 def test_build_model_max():
-    with patch('core.ProblemClass.pl.LpProblem') as lpp:
+    with patch('horuslp.core.ProblemClass.pl.LpProblem') as lpp:
         class TestProblem(Problem):
             objective = ObjectiveComponent
             constraints = []
@@ -264,7 +264,7 @@ def test_gulp_problem_built():
 
 
 def test_read_results_vargroup():
-    with patch('core.ProblemClass.pl.value') as plv:
+    with patch('horuslp.core.ProblemClass.pl.value') as plv:
         plv.return_value = 'plv_ret'
         prob = TestProblem()
         pl_var = Mock()
@@ -284,7 +284,7 @@ def test_read_results_vargroup():
 
 
 def test_read_result_vars():
-    with patch('core.ProblemClass.pl.value') as plv:
+    with patch('horuslp.core.ProblemClass.pl.value') as plv:
         plv.return_value = 'plv_retval'
         prob = TestProblem()
         prob.vars = Mock()
@@ -306,7 +306,7 @@ def test_read_result_vars():
 
 
 def test_read_constraint_values():
-    with patch('core.ProblemClass.get_constraints_value') as gcv:
+    with patch('horuslp.core.ProblemClass.get_constraints_value') as gcv:
         gcv.return_value = 'constraint_value'
         prob = TestProblem()
         prob.implemented_constraints = Mock()
@@ -326,7 +326,7 @@ def test_read_constraint_values():
 
 
 def test_read_metric_values():
-    with patch('core.ProblemClass.call_with_required_args') as cwra:
+    with patch('horuslp.core.ProblemClass.call_with_required_args') as cwra:
         class TestMetric1:
             name = 'test1'
             define = 'testd1'
@@ -347,7 +347,7 @@ def test_read_metric_values():
 
 
 def test_solve():
-    with patch('core.ProblemClass.pl.LpStatus') as stat:
+    with patch('horuslp.core.ProblemClass.pl.LpStatus') as stat:
         stat.__getitem__ = Mock()
         stat.__getitem__.return_value = 'stat_ret_val'
         prob = TestProblem()
@@ -398,7 +398,7 @@ def test_build_subproblem():
 
 
 def test_find_infeasible_constraints_no_others():
-    with patch('core.ProblemClass.itertools.combinations') as cmb:
+    with patch('horuslp.core.ProblemClass.itertools.combinations') as cmb:
         prob = TestProblem()
         prob.build_subproblem = Mock()
         constr_1 = Mock()
@@ -412,7 +412,7 @@ def test_find_infeasible_constraints_no_others():
         assert infeasibles == [('constr_1_name', 'constr_2_name')]
 
 def test_find_infeasible_constraints_some_others_infeasible():
-    with patch('core.ProblemClass.itertools.combinations') as cmb:
+    with patch('horuslp.core.ProblemClass.itertools.combinations') as cmb:
         prob = TestProblem()
         prob.build_subproblem = Mock()
         sub_prob = Mock()
@@ -435,7 +435,7 @@ def test_find_infeasible_constraints_some_others_infeasible():
         sub_prob.find_infeasible_constraints.assert_called()
 
 def test_find_infeasible_constraints_some_others_optimal():
-    with patch('core.ProblemClass.itertools.combinations') as cmb:
+    with patch('horuslp.core.ProblemClass.itertools.combinations') as cmb:
         prob = TestProblem()
         prob.build_subproblem = Mock()
         sub_prob = Mock()
@@ -456,7 +456,7 @@ def test_find_infeasible_constraints_some_others_optimal():
 
 
 def test_find_infeasible_constraint_group_no_others():
-    with patch('core.ProblemClass.itertools.combinations') as cmb:
+    with patch('horuslp.core.ProblemClass.itertools.combinations') as cmb:
         prob = TestProblem()
         prob.build_subproblem = Mock()
         constr_1 = Mock()
@@ -470,7 +470,7 @@ def test_find_infeasible_constraint_group_no_others():
         assert infeasibles == [('constr_1_name', 'constr_2_name')]
 
 def test_find_infeasible_constraint_group_some_others_infeasible():
-    with patch('core.ProblemClass.itertools.combinations') as cmb:
+    with patch('horuslp.core.ProblemClass.itertools.combinations') as cmb:
         prob = TestProblem()
         prob.build_subproblem = Mock()
         sub_prob = Mock()
@@ -493,7 +493,7 @@ def test_find_infeasible_constraint_group_some_others_infeasible():
         sub_prob.find_infeasible_constraint_groups.assert_called()
 
 def test_find_infeasible_constraint_group_some_others_optimal():
-    with patch('core.ProblemClass.itertools.combinations') as cmb:
+    with patch('horuslp.core.ProblemClass.itertools.combinations') as cmb:
         prob = TestProblem()
         prob.build_subproblem = Mock()
         sub_prob = Mock()
@@ -559,7 +559,7 @@ def test_find_incompatibility_no_infeasibles():
 
 
 def test_print_result_variables():
-    with patch('core.ProblemClass.print') as prnt:
+    with patch('horuslp.core.ProblemClass.print') as prnt:
         prob = TestProblem()
         prob.result_variables = Mock()
         prob.result_variables.items = Mock()
@@ -578,8 +578,8 @@ def test_print_result_variables():
 
 
 def test_print_result_objectives():
-    with patch('core.ProblemClass.print') as prnt:
-        with patch('core.ProblemClass.call_with_required_args') as cwra:
+    with patch('horuslp.core.ProblemClass.print') as prnt:
+        with patch('horuslp.core.ProblemClass.call_with_required_args') as cwra:
             cwra.return_value = 0.01
             prob = TestProblem()
             prob.objective_obj = Mock()
@@ -592,8 +592,8 @@ def test_print_result_objectives():
 
 
 def test_print_result_objectives_combined_obj():
-    with patch('core.ProblemClass.print') as prnt:
-        with patch('core.ProblemClass.call_with_required_args') as cwra:
+    with patch('horuslp.core.ProblemClass.print') as prnt:
+        with patch('horuslp.core.ProblemClass.call_with_required_args') as cwra:
             cwra.return_value = 0.01
 
             class CombObj(CombinedObjective):
@@ -643,7 +643,7 @@ def test_print_optimal_results():
 
 
 def test_print_infeasible_results():
-    with patch('core.ProblemClass.print') as prnt:
+    with patch('horuslp.core.ProblemClass.print') as prnt:
         prob = TestProblem()
         prob.find_incompatibility = Mock()
         prob.find_incompatibility.return_value = 'find_incompat_ret'
@@ -653,8 +653,8 @@ def test_print_infeasible_results():
         prnt.assert_any_call("Incompatible Constraints:", 'find_incompat_ret')
 
 def test_print_results_optimal():
-    with patch('core.ProblemClass.pl.LpStatus') as stat:
-        with patch('core.ProblemClass.print') as prnt:
+    with patch('horuslp.core.ProblemClass.pl.LpStatus') as stat:
+        with patch('horuslp.core.ProblemClass.print') as prnt:
             stat.__getitem__ = Mock()
             stat.__getitem__.return_value = 'Optimal'
             prob = TestProblem()
@@ -668,8 +668,8 @@ def test_print_results_optimal():
 
 
 def test_print_results_infeasible_nofind():
-    with patch('core.ProblemClass.pl.LpStatus') as stat:
-        with patch('core.ProblemClass.print') as prnt:
+    with patch('horuslp.core.ProblemClass.pl.LpStatus') as stat:
+        with patch('horuslp.core.ProblemClass.print') as prnt:
             stat.__getitem__ = Mock()
             stat.__getitem__.return_value = 'Infeasible'
             prob = TestProblem()
@@ -684,8 +684,8 @@ def test_print_results_infeasible_nofind():
 
 
 def test_print_results_infeasible_find():
-    with patch('core.ProblemClass.pl.LpStatus') as stat:
-        with patch('core.ProblemClass.print') as prnt:
+    with patch('horuslp.core.ProblemClass.pl.LpStatus') as stat:
+        with patch('horuslp.core.ProblemClass.print') as prnt:
             stat.__getitem__ = Mock()
             stat.__getitem__.return_value = 'Infeasible'
             prob = TestProblem()

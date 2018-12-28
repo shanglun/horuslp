@@ -9,7 +9,7 @@ def test_get_constr_value_null():
 
 
 def test_get_constr_value_iters():
-    with patch('core.utils.pl.value') as pl_mock:
+    with patch('horuslp.core.utils.pl.value') as pl_mock:
         test_const = {
             'test_var_1': 1,
             'test_var_2': 2
@@ -22,7 +22,7 @@ def test_get_constr_value_iters():
 
 
 def test_call_with_required_args_no_varkw():
-    with patch('core.utils.inspect.getfullargspec') as mock_argspeck:
+    with patch('horuslp.core.utils.inspect.getfullargspec') as mock_argspeck:
         mock_ret = Mock()
         mock_ret.varkw = None
         mock_ret.args = ['a', 'b', 'd']
@@ -37,7 +37,7 @@ def test_call_with_required_args_no_varkw():
 
 
 def test_call_with_required_args_with_varkw():
-    with patch('core.utils.inspect.getfullargspec') as mock_argspeck:
+    with patch('horuslp.core.utils.inspect.getfullargspec') as mock_argspeck:
         mock_ret = Mock()
         mock_ret.varkw = 'kwargs'
         mock_ret.args = ['a', 'b', 'd']

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, Mock
 
-from horuslp.core import ObjectiveComponent, CombinedObjective
+from horuslp.core.Objective import ObjectiveComponent, CombinedObjective
 
 
 def test_objective_default_name():
@@ -30,7 +30,7 @@ def test_combined_objective_defaults():
 
 
 def test_combined_objective_collection():
-    with patch('core.Objective.call_with_required_args') as mock_call:
+    with patch('horuslp.core.Objective.call_with_required_args') as mock_call:
         mock_call.return_value = 1
         mock_define_1 = Mock()
         mock_define_2 = Mock()

@@ -4,3 +4,5 @@
 dist/*
 MANIFEST
 setup.py
+*.pyc
+.cache/*

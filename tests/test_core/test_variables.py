@@ -2,8 +2,8 @@ import pulp as pl
 import pytest
 from unittest.mock import patch, Mock
 
-from horuslp.core import BINARY, INTEGER, CONTINUOUS
-from horuslp.core import Variable, VariableGroup, VariableManager, IntegerVariable, IntegerVariableGroup, \
+from horuslp.core.constants import BINARY, INTEGER, CONTINUOUS
+from horuslp.core.Variables import Variable, VariableGroup, VariableManager, IntegerVariable, IntegerVariableGroup, \
     BinaryVariable, BinaryVariableGroup
 
 
@@ -73,7 +73,7 @@ def test_var_manager_non_bad_type():
 
 
 def test_var_manager_variable():
-    with patch('core.Variables.pl.LpVariable') as lpv_mock:
+    with patch('horuslp.core.Variables.pl.LpVariable') as lpv_mock:
         lpv_mock.return_value = 'return_var'
         class VarMgr(VariableManager):
             vars = [Variable('test', 0, 1), BinaryVariable('test2'), IntegerVariable('test3', -1, 2)]
@@ -100,7 +100,7 @@ def test_var_manager_variable():
 
 
 def test_var_manager_vargroup():
-    with patch('core.Variables.pl.LpVariable') as lpv_mock:
+    with patch('horuslp.core.Variables.pl.LpVariable') as lpv_mock:
         lpv_mock.return_value = 'return_var'
         class VarMgr(VariableManager):
             vars = [
@@ -154,7 +154,7 @@ def test_var_manager_vargroup():
 
 
 def test_var_manager_mix():
-    with patch('core.Variables.pl.LpVariable') as lpv_mock:
+    with patch('horuslp.core.Variables.pl.LpVariable') as lpv_mock:
         lpv_mock.return_value = 'return_var'
         class VarMgr(VariableManager):
             vars = [
