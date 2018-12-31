@@ -4,8 +4,8 @@
 import json
 
 from horuslp.core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
-from horuslp.core import MAXIMIZE
-from horuslp.core import Variable, BinaryVariable
+from horuslp.core.constants import MAXIMIZE
+from horuslp.core.Variables import Variable, BinaryVariable
 
 JSON = '''
 {

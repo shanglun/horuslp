@@ -1,7 +1,5 @@
 '''
-9. Sometimes it might make to have people develop different variable managers that support separate objectives
-and constraints. Can be useful if we have "raw" variables and variables that come from combinations of raw variables,
-for instance
+9. A slightly more complex problem
 '''
 import json
 
@@ -54,13 +52,18 @@ class BagCapacityConstraint(Constraint):
 class UniquenessConstraints(Constraint):
     def __init__(self):
         super(UniquenessConstraints, self).__init__()
+        # call the dependent constraint builder function for every durable item, and
+        # push them into dependent constraints.
         dependent_constraints = [self.define_uniqueness_constraint(item) for item in mip_cfg['durable']]
         self.dependent_constraints = dependent_constraints
 
     def define_uniqueness_constraint(self, item):
+        # classes are first-class objects in python, so we can define a class within this function and return it
         class UQConstraint(Constraint):
+            # we name the constraint based on the item this is for, so that debugging is easier.
             name = "Uniqueness_%s" % item['name']
 
+            # the define function can access the variables much in the same way as other functions
             def define(self, suitcase_d, bag_d):
                 return suitcase_d[item['name']] + bag_d[item['name']] <= 1
 
@@ -75,17 +78,17 @@ class TotalValueObjective(ObjectiveComponent):
         return fragile_value + durable_value_s + durable_value_d
 
 
-class SuitcaseFragileValueMetric(Metric):
+class SuitcaseFragileWeightMetric(Metric):
     def define(self, suitcase_f):
         return sum([suitcase_f[i['name']] * i['weight'] for i in mip_cfg['fragile']])
 
 
-class SuitcaseDurableValueMetric(Metric):
+class SuitcaseDurableWeightMetric(Metric):
     def define(self, suitcase_d):
         return sum([suitcase_d[i['name']] * i['weight'] for i in mip_cfg['durable']])
 
 
-class BagValueMetric(Metric):
+class BagWeightMetric(Metric):
     def define(self, bag_d):
         return sum([bag_d[i['name']] * i['weight'] for i in mip_cfg['durable']])
 
@@ -94,7 +97,7 @@ class KnapsackProblem(Problem):
     variables = KnapsackVariables
     constraints = [SuitcaseCapacityConstraint, BagCapacityConstraint, UniquenessConstraints]
     objective = TotalValueObjective
-    metrics = [SuitcaseDurableValueMetric, SuitcaseFragileValueMetric, BagValueMetric]
+    metrics = [SuitcaseDurableWeightMetric, SuitcaseFragileWeightMetric, BagWeightMetric]
     sense = MAXIMIZE
 
 
@@ -121,7 +124,7 @@ BagCapacityConstraint: 17.00
 Uniqueness_figurine: 1.00
 Uniqueness_horn: 1.00
 Uniqueness_leatherman: 1.00
-SuitcaseDurableValueMetric: 0.00
-SuitcaseFragileValueMetric: 15.00
-BagValueMetric: 17.00
+SuitcaseDurableWeightMetric: 0.00
+SuitcaseFragileWeightMetric: 15.00
+BagWeightMetric: 17.00
 '''

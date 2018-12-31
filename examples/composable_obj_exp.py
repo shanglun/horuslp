@@ -6,40 +6,40 @@ from horuslp.core.constants import MAXIMIZE
 from horuslp.core.Variables import Variable, BinaryVariable
 
 
-class DependentConstraint(Constraint):
-    def define(self, a):
-        return a <= 1
+class MustHaveItemConstraint(Constraint):
+    def define(self, camera):
+        return camera >= 1
 
 
 class SizeConstraint(Constraint):
-    dependent_constraints = [DependentConstraint]
+    dependent_constraints = [MustHaveItemConstraint]
 
-    def define(self, a, b, c, d):
-        return 2 * a + 4 * b + 7 * c + 10 * d <= 15
+    def define(self, camera, figurine, cider, horn):
+        return 2 * camera + 4 * figurine + 7 * cider + 10 * horn <= 15
 
 
 class ValueObjectiveComponent(ObjectiveComponent):
-    def define(self, a, b, c, d):
-        return 5 * a + 7 * b + 2 * c + 10 * d
+    def define(self, camera, figurine, cider, horn):
+        return 5 * camera + 7 * figurine + 2 * cider + 10 * horn
 
 
-class ILoveAppleFigurineObjectiveComponent(ObjectiveComponent):
-    def define(self, b, c):
-        return 2 * b + c
+class ILoveCiderFigurineObjectiveComponent(ObjectiveComponent):
+    def define(self, figurine, cider):
+        return figurine + cider
 
 
 class KnapsackVariables(VariableManager):
     vars = [
-        BinaryVariable('a'),
-        BinaryVariable('b'),
-        BinaryVariable('c'),
-        BinaryVariable('d')
+        BinaryVariable('camera'),
+        BinaryVariable('figurine'),
+        BinaryVariable('cider'),
+        BinaryVariable('horn')
     ]
 
 
 class Combined(CombinedObjective):
     objectives = [
-        (ILoveAppleFigurineObjectiveComponent, 2),
+        (ILoveCiderFigurineObjectiveComponent, 2),
         (ValueObjectiveComponent, 1)
     ]
 

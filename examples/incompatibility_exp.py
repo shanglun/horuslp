@@ -8,57 +8,75 @@ from horuslp.core.constants import MAXIMIZE
 
 
 class SizeConstraint(Constraint):
-    def define(self, a, b, c, d):
-        return 2 * a + 4 * b + 7 * c + 10 * d <= 15
+    def define(self, camera, figurine, cider, horn):
+        return 2 * camera + 4 * figurine + 7 * cider + 10 * horn <= 15
 
 
 class SizeConstraint2(Constraint):
-    def define(self, a, b, c, d):
-        return 2 * a + 4 * b + 7 * c + 10 * d <= 20
+    def define(self, camera, figurine, cider, horn):
+        return 2 * camera + 4 * figurine + 7 * cider + 10 * horn <= 20
+
+
+class MustHaveItemConstraint(Constraint):
+    def define(self, cider):
+        return cider >= 1
 
 
 class IncompatibleConstraint1(Constraint):
-    def define(self, a):
-        return a >= 1
+    def define(self, camera):
+        return camera >= 1
 
 
 class IncompatibleConstraint2(Constraint):
-    def define(self, a):
-        return a <= 0
+    def define(self, camera):
+        return camera <= 0
 
 
-class CombinedConstraints(Constraint):
-    dependent_constraints = [SizeConstraint, SizeConstraint2, IncompatibleConstraint1, IncompatibleConstraint2]
+class CombinedConstraints1(Constraint):
+    dependent_constraints = [SizeConstraint2, IncompatibleConstraint1]
+
+
+class CombinedConstraints2(Constraint):
+    dependent_constraints = [SizeConstraint, IncompatibleConstraint2]
 
 
 class ValueObjective(ObjectiveComponent):
-    def define(self, a, b, c, d):
-        return 5 * a + 7 * b + 2 * c + 10 * d
+    def define(self, camera, figurine, cider, horn):
+        return 5 * camera + 7 * figurine + 2 * cider + 10 * horn
 
 
 class KnapsackVariables(VariableManager):
     vars = [
-        BinaryVariable('a'),
-        BinaryVariable('b'),
-        BinaryVariable('c'),
-        BinaryVariable('d')
+        BinaryVariable('camera'),
+        BinaryVariable('figurine'),
+        BinaryVariable('cider'),
+        BinaryVariable('horn')
     ]
 
 
 class KnapsackProblem(Problem):
     variables = KnapsackVariables
     objective = ValueObjective
-    # constraints = [SizeConstraint, IncompatibleConstraint1, IncompatibleConstraint2, SizeConstraint2]
-    constraints = [CombinedConstraints]
+    constraints = [CombinedConstraints1, CombinedConstraints2, MustHaveItemConstraint]
     sense = MAXIMIZE
 
 
 prob = KnapsackProblem()
 prob.solve()
-prob.print_results(True, True)
+print("===== Basic Print ========")
+prob.print_results()
+print("===== Basic Infeasibility Search =========")
+prob.print_results(find_infeasible=True)
+print("===== Now with Deep Infeasibility Search ========")
+prob.print_results(find_infeasible=True, deep_infeasibility_search=True)
 
 '''
 Output:
+===== Basic Infeasibility Search =========
+KnapsackProblem: Infeasible
+Finding incompatible constraints...
+Incompatible Constraints: ('CombinedConstraints1', 'CombinedConstraints2')
+===== Now with Deep Infeasibility Search ========
 KnapsackProblem: Infeasible
 Finding incompatible constraints...
 Incompatible Constraints: ('IncompatibleConstraint1', 'IncompatibleConstraint2')

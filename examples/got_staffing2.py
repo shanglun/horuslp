@@ -6,7 +6,8 @@ from horuslp.core.Variables import BinaryVariableGroup, IntegerVariableGroup
 from horuslp.core import Constraint, VariableManager, Problem, ObjectiveComponent, CombinedObjective
 from horuslp.core.constants import MINIMIZE
 
-shift_requirements = [1, 4, 3, 5, 2]
+shift_requirements = [1, 4, 3, 5, 2]  # the number of workers we need to staff for each shift
+# the availability and pay rates of each of the employees
 workers = {
     "Melisandre": {
         "availability": [0, 1, 4],
@@ -46,6 +47,7 @@ workers = {
     }
 }
 
+# the following people can't work together, sadly.
 ban_list = {
     ("Daenerys", "Jaime"),
     ("Daenerys", "Cersei"),
@@ -57,6 +59,7 @@ ban_list = {
     ("Jaime", "Cersei")
 }
 
+# Dothraki Staffing Corp will provide us expensive temp workers
 DOTHRAKI_MAX = 10
 DOTHRAKI_COST = 45
 
@@ -65,72 +68,85 @@ class StaffingVariables(VariableManager):
     vars = []
 
     def __init__(self):
+        # like dependent constraints, we can dynamically define variables in the init function
         super(StaffingVariables, self).__init__()
+        # regular workers
         varkeys = []
         for employee, availability_info in workers.items():
             for shift in availability_info['availability']:
                 varkeys.append((employee, shift))
         self.vars.append(BinaryVariableGroup('employee_shifts', varkeys))
+        # dothrakis
         dothraki_keys = [i for i in range(len(shift_requirements))]
         self.vars.append(IntegerVariableGroup('dothraki_workers', dothraki_keys, 0, DOTHRAKI_COST))
 
 
 class SufficientStaffingConstraint(Constraint):
+    # we need to staff people sufficiently
     dependent_constraints = []
 
     def __init__(self):
         super(SufficientStaffingConstraint, self).__init__()
         for shift_num, shift_req in enumerate(shift_requirements):
+            self.dependent_constraints.append(self.build_shift_constraint(shift_num, shift_req))
 
-            class ShiftConstraint(Constraint):
-                name = "shift_requirement_%d" % shift_num
-                sn = shift_num
-                sr = shift_req
+    def build_shift_constraint(self, sn, sr):
+        class ShiftConstraint(Constraint):
+            name = "shift_requirement_%d" % sn
 
-                def define(self, employee_shifts, dothraki_workers):
-                    variables = [val for key, val in employee_shifts.items() if key[1] == self.sn]
-                    variables.append(dothraki_workers[self.sn])
-                    return sum(variables) >= self.sr
-            self.dependent_constraints.append(ShiftConstraint)
+            def define(self, employee_shifts, dothraki_workers):
+                variables = [val for key, val in employee_shifts.items() if key[1] == sn]
+                variables.append(dothraki_workers[sn])
+                return sum(variables) >= sr
+        return ShiftConstraint
 
 
 class PersonalConflictsConstraint(Constraint):
+    # some people can't work together
     dependent_constraints = []
 
     def __init__(self):
         super(PersonalConflictsConstraint, self).__init__()
         for person_1, person_2 in ban_list:
             for shift in range(len(shift_requirements)):
-                class ConflictConstraint(Constraint):
-                    p1 = person_1
-                    p2 = person_2
-                    s = shift
-                    name = "Conflict_%s_%s_%d" % (person_1, person_2, shift)
+                self.dependent_constraints.append(self.build_conflict_constraint(person_1, person_2, shift))
 
-                    def define(self, employee_shifts):
-                        if (self.p1, self.s) in employee_shifts and (self.p2, self.s) in employee_shifts:
-                            return employee_shifts[self.p1, self.s] + employee_shifts[self.p2, self.s] <= 1
-                        return True
-                self.dependent_constraints.append(ConflictConstraint)
+    def build_conflict_constraint(self, p1, p2, s):
+        class ConflictConstraint(Constraint):
+            name = "Conflict_%s_%s_%d" % (p1, p2, s)
+
+            def define(self, employee_shifts):
+                if (p1, s) in employee_shifts and (p2, s) in employee_shifts:
+                    return employee_shifts[p1, s] + employee_shifts[p2, s] <= 1
+                return True
+        return ConflictConstraint
 
 
 class LaborStandardsConstraint(Constraint):
+    # we can make someone work more than two shifts a day.
     dependent_constraints = []
 
     def __init__(self):
         super(LaborStandardsConstraint, self).__init__()
         for worker in workers.keys():
+            # we don't need a constraint builder function, but in those circumstances
+            # we need to set the needed values as class variables and refer to them
+            # via the self keyword due to how python's closure system works
             class LaborConstraint(Constraint):
+                # we can't use worker directly!
                 wk = worker
                 name = "labor_standard_%s" % worker
 
                 def define(self, employee_shifts):
+                    # we need to access the worker using self. Change self.wk to worker to see
+                    # why we need to do this
                     worker_vars = [var for key, var in employee_shifts.items() if key[0] == self.wk]
                     return sum(worker_vars) <= 2
             self.dependent_constraints.append(LaborConstraint)
 
 
 class CostObjective(ObjectiveComponent):
+    # this is the cost function for all the named workers
     def define(self, employee_shifts, dothraki_workers):
         costs = [
             workers[key[0]]['cost'] * var for key, var in employee_shifts.items()
@@ -139,6 +155,7 @@ class CostObjective(ObjectiveComponent):
 
 
 class DothrakiCostObjective(ObjectiveComponent):
+    # don't forget the Dothrakis
     def define(self, dothraki_workers):
         dothraki_costs = [
             dothraki_workers[sn] * DOTHRAKI_COST for sn in dothraki_workers
@@ -153,7 +170,7 @@ class TotalCostObjective(CombinedObjective):
     ]
 
 
-class GotShiftProblem(Problem):
+class StaffingProblem(Problem):
     variables = StaffingVariables
     objective = TotalCostObjective
     constraints = [SufficientStaffingConstraint, PersonalConflictsConstraint, LaborStandardsConstraint]
@@ -161,7 +178,7 @@ class GotShiftProblem(Problem):
 
 
 if __name__ == '__main__':
-    prob = GotShiftProblem()
+    prob = StaffingProblem()
     prob.solve()
     prob.print_results()
 

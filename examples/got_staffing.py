@@ -2,11 +2,10 @@
 11. Demo for solving something non-trivial
    a. The game of thrones staffing problem
 '''
-import copy
 
-from horuslp.core import Constraint, VariableManager, Problem, Metric, ObjectiveComponent
-from horuslp.core.constants import MAXIMIZE, MINIMIZE
-from horuslp.core.Variables import Variable, BinaryVariable, BinaryVariableGroup
+from horuslp.core import Constraint, VariableManager, Problem, ObjectiveComponent
+from horuslp.core.constants import MINIMIZE
+from horuslp.core.Variables import BinaryVariableGroup
 
 shift_requirements = [1, 4, 3, 5, 2]
 workers = {
@@ -81,16 +80,16 @@ class SufficientStaffingConstraint(Constraint):
     def __init__(self):
         super(SufficientStaffingConstraint, self).__init__()
         for shift_num, shift_req in enumerate(shift_requirements):
+            self.dependent_constraints.append(self.build_shift_constraint(shift_num, shift_req))
 
-            class ShiftConstraint(Constraint):
-                name = "shift_requirement_%d" % shift_num
-                sn = shift_num
-                sr = shift_req
+    def build_shift_constraint(self, sn, sr):
+        class ShiftConstraint(Constraint):
+            name = "shift_requirement_%d" % sn
 
-                def define(self, employee_shifts):
-                    variables = [val for key, val in employee_shifts.items() if key[1] == self.sn]
-                    return sum(variables) >= self.sr
-            self.dependent_constraints.append(ShiftConstraint)
+            def define(self, employee_shifts):
+                variables = [val for key, val in employee_shifts.items() if key[1] == sn]
+                return sum(variables) >= sr
+        return ShiftConstraint
 
 
 class PersonalConflictsConstraint(Constraint):
@@ -100,17 +99,17 @@ class PersonalConflictsConstraint(Constraint):
         super(PersonalConflictsConstraint, self).__init__()
         for person_1, person_2 in ban_list:
             for shift in range(len(shift_requirements)):
-                class ConflictConstraint(Constraint):
-                    p1 = person_1
-                    p2 = person_2
-                    s = shift
+                self.dependent_constraints.append(self.build_conflict_constraint(person_1, person_2, shift))
 
-                    def define(self, employee_shifts):
-                        if (self.p1, self.s) in employee_shifts and (self.p2, self.s) in employee_shifts:
-                            return employee_shifts[self.p1, self.s] + employee_shifts[self.p2, self.s] <= 1
-                        return True
-                self.dependent_constraints.append(ConflictConstraint)
+    def build_conflict_constraint(self, p1, p2, s):
+        class ConflictConstraint(Constraint):
+            name = "Conflict_%s_%s_%d" % (p1, p2, s)
 
+            def define(self, employee_shifts):
+                if (p1, s) in employee_shifts and (p2, s) in employee_shifts:
+                    return employee_shifts[p1, s] + employee_shifts[p2, s] <= 1
+                return True
+        return ConflictConstraint
 
 class CostObjective(ObjectiveComponent):
     def define(self, employee_shifts):

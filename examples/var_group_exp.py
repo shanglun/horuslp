@@ -9,17 +9,22 @@ from horuslp.core.constants import MAXIMIZE
 
 class SizeConstraint(Constraint):
     def define(self, objects):
-        return 2 * objects[0] + 4 * objects[1] + 7 * objects[2] + 10 * objects[3] <= 15
+        return 2 * objects['camera'] + 4 * objects['figurine'] + 7 * objects['cider'] + 10 * objects['horn'] <= 15
 
 
 class ValueObjective(ObjectiveComponent):
     def define(self, objects):
-        return 5 * objects[0] + 7 * objects[1] + 2 * objects[2] + 10 * objects[3]
+        return 5 * objects['camera'] + 7 * objects['figurine'] + 2 * objects['cider'] + 10 * objects['horn']
 
 
 class KnapsackVariables(VariableManager):
     vars = [
-        BinaryVariableGroup('objects', [i for i in range(4)])
+        BinaryVariableGroup('objects', [
+            'camera',
+            'figurine',
+            'cider',
+            'horn'
+        ])
     ]
 
 
@@ -38,11 +43,11 @@ print(prob.result_variables)
 '''
 Output:
 KnapsackProblem: Optimal
-objects[0] 0.0
-objects[1] 1.0
-objects[2] 0.0
-objects[3] 1.0
+objects[camera] 0.0
+objects[figurine] 1.0
+objects[cider] 0.0
+objects[horn] 1.0
 ValueObjective: 17.00
 SizeConstraint: 14.00
-{'objects': {0: 0.0, 1: 1.0, 2: 0.0, 3: 1.0}}
+{'objects': {'camera': 0.0, 'figuring': 1.0, 'cider': 0.0, 'horn': 1.0}}
 '''
