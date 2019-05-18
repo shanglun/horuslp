@@ -5,14 +5,19 @@ from horuslp_gurobi.core import ObjectiveComponent, Constraint, Metric, Variable
 from horuslp_gurobi.core.Variables import BinaryVariable, IntegerVariable
 from horuslp_gurobi.core.constants import MAXIMIZE
 from unittest.mock import patch, Mock
-
 from horuslp_gurobi.core.ProblemClass import Problem
 
 
+class TestObjectiveComponent(ObjectiveComponent):
+    def define(self):
+        return True
+
+
 class TestProblem(Problem):
-    objective = ObjectiveComponent
+    objective = TestObjectiveComponent
     constraints = []
     variables = VariableManager
+
 
 def test_prob_no_name():
     prob = TestProblem()
@@ -27,6 +32,9 @@ def test_prob_initializer():
             super(ObjectiveComponent, self).__init__()
             obj_initializer_mock()
 
+        def define(self):
+            return True
+
     define_vars_mock = Mock()
     varmgr_init_mock = Mock()
 
@@ -35,8 +43,54 @@ def test_prob_initializer():
             super(TestVariables, self).__init__(model)
             self.define_variables = define_vars_mock
             varmgr_init_mock()
-            self.variables = 'variables_test'
+            self.variables = {'variable_test_name': 'variables_test_value'}
 
+    constraint1_init_mock = Mock()
+
+    class TestConstraint1(Constraint):
+        def __init__(self, model):
+            super(TestConstraint1, self).__init__(model)
+            constraint1_init_mock()
+
+
+    constraint2_init_mock = Mock()
+
+    class TestConstraint2(Constraint):
+        def __init__(self, model):
+            super(TestConstraint2, self).__init__(model)
+            constraint2_init_mock()
+
+    class TestProblem(Problem):
+        objective = TestObjective
+        constraints = [TestConstraint1, TestConstraint2]
+        variables = TestVariables
+
+    with patch('horuslp_gurobi.core.ProblemClass.gr') as mock_gurobi:
+        mock_gurobi.Model = Mock()
+        model_mock = Mock()
+        mock_gurobi.Model.return_value = model_mock
+        prob = TestProblem()
+        obj_initializer_mock.assert_called()
+        define_vars_mock.assert_called()
+        varmgr_init_mock.assert_called()
+        constraint1_init_mock.assert_called()
+        constraint2_init_mock.assert_called()
+        assert prob.vars == {'variable_test_name': 'variables_test_value'}
+        assert not prob.model_built
+        assert prob.state == 0
+        assert prob.status is None
+        assert prob.model is not None
+        assert prob.result_variables == {}
+        assert prob.implemented_constraints == {'TestConstraint1': True, 'TestConstraint2': True}
+        assert prob.constraint_results == {}
+        assert len(prob.constraint_objs) == 2
+        assert prob.constraint_objs[0].__class__ == TestConstraint1
+        assert prob.constraint_objs[1].__class__ == TestConstraint2
+        assert prob._flatten_constraints
+        mock_gurobi.Model.assert_called()
+
+
+def test_constraint_flattening():
     constraint1_init_mock = Mock()
 
     class TestConstraint1(Constraint):
@@ -51,52 +105,13 @@ def test_prob_initializer():
             super(TestConstraint2, self).__init__(model)
             constraint2_init_mock()
 
-    class TestProblem(Problem):
-        objective = TestObjective
-        constraints = [TestConstraint1, TestConstraint2]
-        variables = TestVariables
-
-    prob = TestProblem()
-    obj_initializer_mock.assert_called()
-    define_vars_mock.assert_called()
-    varmgr_init_mock.assert_called()
-    constraint1_init_mock.assert_called()
-    constraint2_init_mock.assert_called()
-    assert prob.vars == 'variables_test'
-    assert not prob.model_built
-    assert prob.state == 0
-    assert prob.status is None
-    assert prob.prob is None
-    assert prob.result_variables == {}
-    assert prob.implemented_constraints == {}
-    assert prob.constraint_results == {}
-    assert len(prob.constraint_objs) == 2
-    assert prob.constraint_objs[0].__class__ == TestConstraint1
-    assert prob.constraint_objs[1].__class__ == TestConstraint2
-    assert prob._flatten_constraints
-
-def test_constraint_flattening():
-    constraint1_init_mock = Mock()
-
-    class TestConstraint1(Constraint):
-        def __init__(self):
-            super(TestConstraint1, self).__init__()
-            constraint1_init_mock()
-
-    constraint2_init_mock = Mock()
-
-    class TestConstraint2(Constraint):
-        def __init__(self):
-            super(TestConstraint2, self).__init__()
-            constraint2_init_mock()
-
     combined_init_mock = Mock()
 
     class CombinedConstraint(Constraint):
         dependent_constraints = [TestConstraint1, TestConstraint2]
 
-        def __init__(self):
-            super(CombinedConstraint, self).__init__()
+        def __init__(self, model):
+            super(CombinedConstraint, self).__init__(model)
             combined_init_mock()
 
     class TestProblem(Problem):
@@ -118,15 +133,15 @@ def test_non_flattening():
     constraint1_init_mock = Mock()
 
     class TestConstraint1(Constraint):
-        def __init__(self):
-            super(TestConstraint1, self).__init__()
+        def __init__(self, model):
+            super(TestConstraint1, self).__init__(model)
             constraint1_init_mock()
 
     constraint2_init_mock = Mock()
 
     class TestConstraint2(Constraint):
-        def __init__(self):
-            super(TestConstraint2, self).__init__()
+        def __init__(self, model):
+            super(TestConstraint2, self).__init__(model)
             constraint2_init_mock()
 
     combined_init_mock = Mock()
@@ -134,12 +149,12 @@ def test_non_flattening():
     class CombinedConstraint(Constraint):
         dependent_constraints = [TestConstraint1, TestConstraint2]
 
-        def __init__(self):
-            super(CombinedConstraint, self).__init__()
+        def __init__(self, model):
+            super(CombinedConstraint, self).__init__(model)
             combined_init_mock()
 
     class TestProblem(Problem):
-        objective = ObjectiveComponent
+        objective = TestObjectiveComponent
         constraints = [CombinedConstraint]
         variables = VariableManager
         _flatten_constraints = False
@@ -154,175 +169,177 @@ def test_non_flattening():
 
 
 def test_implement_constraint():
-    with patch('horuslp.core.ProblemClass.call_with_required_args') as cwra:
-        prob = TestProblem()
-        prob.vars = 'test_vars'
-        lp_prob_mock = ''
-        constraint_mock = Mock()
-        constraint_mock.name = 'test_constraint_name'
-        constraint_mock.define = 'test_define'
-        cwra.return_value = 'constraint_def'
-        prob.implement_constraint(lp_prob_mock, constraint_mock)
-        cwra.assert_called_with('test_define', 'test_vars')
-        assert prob.implemented_constraints['test_constraint_name'] == 'constraint_def'
+    with patch('horuslp_gurobi.core.ProblemClass.call_with_required_args') as cwra:
+        with patch('horuslp_gurobi.core.ProblemClass.gr') as mock_gurobi:
+            mock_gurobi.Model = Mock()
+            model_mock = Mock()
+            mock_gurobi.Model.return_value = model_mock
+            prob = TestProblem()
+            prob.vars = {'test_vars_key': 'test_vars_val'}
+            constraint_mock = Mock()
+            constraint_mock.name = 'test_constraint_name'
+            constraint_mock.define = Mock()
+            cwra.return_value = 'constraint_def'
+            prob.implement_constraint(constraint_mock)
+            cwra.assert_called_with(constraint_mock.define, {'test_vars_key': 'test_vars_val'})
+            assert prob.implemented_constraints['test_constraint_name'] == 'constraint_def'
 
 
 def test_implement_constraints():
-    prob = TestProblem()
-    implement_constraint_mock = Mock()
-    prob.implement_constraint = implement_constraint_mock
-    prob.flattened_constraints = ['constr_1', 'constr_2']
-    prob.implement_constraints('prob')
-    implement_constraint_mock.assert_called()
-    implement_constraint_mock.assert_any_call('prob', 'constr_1')
-    implement_constraint_mock.assert_any_call('prob', 'constr_2')
+    with patch('horuslp_gurobi.core.ProblemClass.gr') as mock_gurobi:
+        mock_gurobi.Model = Mock()
+        model_mock = Mock()
+        mock_gurobi.Model.return_value = model_mock
+        prob = TestProblem()
+        implement_constraint_mock = Mock()
+        prob.implement_constraint = implement_constraint_mock
+        prob.flattened_constraints = ['constr_1', 'constr_2']
+        prob.implement_constraints()
+        implement_constraint_mock.assert_called()
+        implement_constraint_mock.assert_any_call('constr_1')
+        implement_constraint_mock.assert_any_call('constr_2')
+        mock_gurobi.Model.assert_called()
 
 
 def test_implement_objective():
-    with patch('horuslp.core.ProblemClass.call_with_required_args') as cwra:
-        cwra.return_value = 'test_cwra_return'
-        prob = TestProblem()
-        prob.vars = 'vars_test'
-        prob.objective_obj = Mock()
-        prob.objective_obj.define = 'obj_define'
-        prob.implement_objective('')
-        cwra.assert_called_once_with('obj_define', 'vars_test')
-
-
-def test_build_model_already_built():
-    with patch('horuslp.core.ProblemClass.pl.LpProblem') as lpp:
-        prob = TestProblem()
-        prob.model_built = True
-        prob.implement_constraints = Mock()
-        prob.implement_objective = Mock()
-        prob.build_model()
-        prob.implement_constraints.assert_not_called()
-        prob.implement_objective.assert_not_called()
-        lpp.assert_not_called()
-        assert prob.prob is None
+    with patch('horuslp_gurobi.core.ProblemClass.call_with_required_args') as cwra:
+        with patch('horuslp_gurobi.core.ProblemClass.gr') as mock_gurobi:
+            mock_gurobi.Model = Mock()
+            model_mock = Mock()
+            mock_gurobi.Model.return_value = model_mock
+            cwra.return_value = 'test_cwra_return'
+            prob = TestProblem()
+            prob.vars = 'vars_test'
+            prob.objective_obj = Mock()
+            prob.objective_obj.define = 'obj_define'
+            prob.implement_objective()
+            cwra.assert_called_with('obj_define', 'vars_test')
 
 
 def test_build_model_min():
-    with patch('horuslp.core.ProblemClass.pl.LpProblem') as lpp:
-        lpp.return_value = 'test_lp_prob'
-        prob = TestProblem()
-        prob.implement_constraints = Mock()
-        prob.implement_objective = Mock()
-        prob.build_model()
-        lpp.assert_called_once_with('TestProblem', pl.LpMinimize)
-        prob.implement_constraints.assert_called_once_with('test_lp_prob')
-        prob.implement_objective.assert_called_once_with('test_lp_prob')
-        assert prob.model_built
-        assert prob.prob == 'test_lp_prob'
+    with patch('horuslp_gurobi.core.ProblemClass.call_with_required_args') as cwra:
+        with patch('horuslp_gurobi.core.ProblemClass.gr') as mock_gurobi:
+            class TestProblem(Problem):
+                objective = ObjectiveComponent
+                constraints = []
+                variables = VariableManager
+            TestProblem.implement_constraints = Mock()
+            TestProblem.implement_objective = Mock()
+            mock_gurobi.Model = Mock()
+            model_mock = Mock()
+            mock_gurobi.Model.return_value = model_mock
+            prob = TestProblem()
+            prob.implement_constraints.assert_called_once()
+            prob.implement_objective.assert_called_once()
 
 
 def test_build_model_max():
-    with patch('horuslp.core.ProblemClass.pl.LpProblem') as lpp:
-        class TestProblem(Problem):
-            objective = ObjectiveComponent
-            constraints = []
-            variables = VariableManager
-            name = 'test_name'
-            sense = MAXIMIZE
-
-        lpp.return_value = 'test_lp_prob'
-
-        prob = TestProblem()
-        prob.implement_constraints = Mock()
-        prob.implement_objective = Mock()
-        prob.build_model()
-        lpp.assert_called_once_with('test_name', pl.LpMaximize)
-        prob.implement_constraints.assert_called_once_with('test_lp_prob')
-        prob.implement_objective.assert_called_once_with('test_lp_prob')
-        assert prob.model_built
-        assert prob.prob == 'test_lp_prob'
+    with patch('horuslp_gurobi.core.ProblemClass.call_with_required_args') as cwra:
+        with patch('horuslp_gurobi.core.ProblemClass.gr') as mock_gurobi:
+            class TestProblem(Problem):
+                objective = ObjectiveComponent
+                constraints = []
+                variables = VariableManager
+            TestProblem.implement_constraints = Mock()
+            TestProblem.implement_objective = Mock()
+            mock_gurobi.Model = Mock()
+            model_mock = Mock()
+            mock_gurobi.Model.return_value = model_mock
+            prob = TestProblem()
+            prob.implement_constraints.assert_called_once()
+            prob.implement_objective.assert_called_once()
 
 
-def test_gulp_problem_not_built():
+def test_read_results_vargroup():
+    with patch('horuslp_gurobi.core.ProblemClass.call_with_required_args') as cwra:
+        with patch('horuslp_gurobi.core.ProblemClass.gr') as mock_gurobi:
+            class TestProblem(Problem):
+                objective = ObjectiveComponent
+                constraints = []
+                variables = VariableManager
+            TestProblem.implement_constraints = Mock()
+            TestProblem.implement_objective = Mock()
+            mock_gurobi.Model = Mock()
+            model_mock = Mock()
+            mock_gurobi.Model.return_value = model_mock
+            prob = TestProblem()
+            pl_var = Mock()
+            pl_var.items = Mock()
+            var1_mock = Mock()
+            var1_mock.x = 'test_val_1'
+            var2_mock = Mock()
+            var2_mock.x = 'test_val_2'
+            pl_var.items.return_value = [
+                ('test_key_1', var1_mock),
+                ('test_key_2', var2_mock)
+            ]
+            prob.read_result_var_group('var_name', pl_var)
+            pl_var.items.assert_called_once()
+            assert prob.result_variables['var_name'] == {
+                'test_key_1': 'test_val_1',
+                'test_key_2': 'test_val_2'
+            }
+
+
+def test_read_result_vars():
+    with patch('horuslp_gurobi.core.ProblemClass.call_with_required_args') as cwra:
+        with patch('horuslp_gurobi.core.ProblemClass.gr') as mock_gurobi:
+            class TestProblem(Problem):
+                objective = ObjectiveComponent
+                constraints = []
+                variables = VariableManager
+            TestProblem.implement_constraints = Mock()
+            TestProblem.implement_objective = Mock()
+            mock_gurobi.Model = Mock()
+            model_mock = Mock()
+            mock_gurobi.Model.return_value = model_mock
+            prob = TestProblem()
+            prob.vars = Mock()
+            prob.vars.items = Mock()
+            prob.read_result_var_group = Mock()
+            test_var_3 = OrderedDict()
+            var1_mock = Mock()
+            var1_mock.x = 'test_var_1'
+            var2_mock = Mock()
+            var2_mock.x = 'test_var_2'
+            prob.vars.items.return_value = [
+                ('test_name_1', var1_mock),
+                ('test_name_2', var2_mock),
+                ('test_name_3', test_var_3)
+            ]
+            prob.read_result_variables()
+            prob.vars.items.assert_called_once()
+            prob.read_result_var_group.assert_called_with('test_name_3', test_var_3)
+            assert prob.result_variables['test_name_1'] == 'test_var_1'
+            assert prob.result_variables['test_name_2'] == 'test_var_2'
+
+
+def test_read_constraint_values():
+
     class TestProblem(Problem):
         objective = ObjectiveComponent
         constraints = []
         variables = VariableManager
 
-    prob = TestProblem()
-    prob.model_built = False
-    prob.build_model = Mock()
-    prob.prob = 'test_prob'
-    model = prob.get_pulp_problem()
-    assert model == 'test_prob'
-    prob.build_model.assert_called_once()
+    with patch('horuslp_gurobi.core.ProblemClass.call_with_required_args') as cwra:
+        with patch('horuslp_gurobi.core.ProblemClass.get_constraints_value') as gcv:
 
-
-def test_gulp_problem_built():
-    prob = TestProblem()
-    prob.model_built = True
-    prob.build_model = Mock()
-    prob.prob = 'test_prob'
-    model = prob.get_pulp_problem()
-    assert model == 'test_prob'
-    prob.build_model.assert_not_called()
-
-
-def test_read_results_vargroup():
-    with patch('horuslp.core.ProblemClass.pl.value') as plv:
-        plv.return_value = 'plv_ret'
-        prob = TestProblem()
-        pl_var = Mock()
-        pl_var.items = Mock()
-        pl_var.items.return_value = [
-            ('test_key_1', 'test_val_1'),
-            ('test_key_2', 'test_val_2')
-        ]
-        prob.read_result_var_group('var_name', pl_var)
-        plv.assert_any_call('test_val_1')
-        plv.assert_any_call('test_val_2')
-        pl_var.items.assert_called_once()
-        assert prob.result_variables['var_name'] == {
-            'test_key_1': 'plv_ret',
-            'test_key_2': 'plv_ret'
-        }
-
-
-def test_read_result_vars():
-    with patch('horuslp.core.ProblemClass.pl.value') as plv:
-        plv.return_value = 'plv_retval'
-        prob = TestProblem()
-        prob.vars = Mock()
-        prob.vars.items = Mock()
-        prob.read_result_var_group = Mock()
-        test_var_3 = OrderedDict()
-        prob.vars.items.return_value = [
-            ('test_name_1', 'test_var_1'),
-            ('test_name_2', 'test_var_2'),
-            ('test_name_3', test_var_3)
-        ]
-        prob.read_result_variables()
-        prob.vars.items.assert_called_once()
-        plv.assert_any_call('test_var_1')
-        plv.assert_any_call('test_var_2')
-        prob.read_result_var_group.assert_called_with('test_name_3', test_var_3)
-        assert prob.result_variables['test_name_1'] == 'plv_retval'
-        assert prob.result_variables['test_name_2'] == 'plv_retval'
-
-
-def test_read_constraint_values():
-    with patch('horuslp.core.ProblemClass.get_constraints_value') as gcv:
-        gcv.return_value = 'constraint_value'
-        prob = TestProblem()
-        prob.implemented_constraints = Mock()
-        prob.implemented_constraints.items = Mock()
-        prob.implemented_constraints.items.return_value = [
-            ('constr_name_1', 'constr_1'),
-            ('constr_name_2', True),
-            ('constr_name_3', 'constr_3')
-        ]
-        prob.read_constraint_values()
-        gcv.assert_any_call('constr_1')
-        gcv.assert_any_call('constr_3')
-        prob.implemented_constraints.items.assert_called_once()
-        assert prob.constraint_results['constr_name_1'] == 'constraint_value'
-        assert prob.constraint_results['constr_name_3'] == 'constraint_value'
-        assert 'constr_name_2' not in prob.constraint_results
+            gcv.return_value = 'constraint_value'
+            prob = TestProblem()
+            prob.implemented_constraints = Mock()
+            prob.implemented_constraints.items = Mock()
+            prob.implemented_constraints.items.return_value = [
+                ('constr_name_1', 'constr_1'),
+                ('constr_name_2', True),
+                ('constr_name_3', 'constr_3')
+            ]
+            prob.read_constraint_values()
+            gcv.assert_any_call('constr_1')
+            gcv.assert_any_call('constr_3')
+            prob.implemented_constraints.items.assert_called_once()
+            assert prob.constraint_results['constr_name_1'] == 'constraint_value'
+            assert prob.constraint_results['constr_name_3'] == 'constraint_value'
+            assert 'constr_name_2' not in prob.constraint_results
 
 
 def test_read_metric_values():
