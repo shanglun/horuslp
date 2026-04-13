@@ -1,2 +1,2 @@
-pytest==3.0.7
+pytest==9.0.3
 PuLP==1.6.8
